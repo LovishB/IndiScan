@@ -4,19 +4,23 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.yarolegovich.slidingrootnav.SlidingRootNavBuilder;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -25,7 +29,7 @@ import java.util.Calendar;
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
-    private ImageButton btn;
+    private ImageButton btn,menu;
     private ImageView mImageView;
 
     private RecyclerView mRecyclerView;
@@ -39,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> Name_Array;
     private ArrayList<String> Date_Array;
 
+    private TextView t1;
+    private TextView NewProject,Scans,Rate,About,Bug,RemoveAds,Share;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,18 +60,22 @@ public class MainActivity extends AppCompatActivity {
         Name_Array = new ArrayList<>();
         Date_Array = new ArrayList<>();
         mSQLiteHelper = new SQLiteHelper(this);
+        t1 = findViewById(R.id.main_picback_text);
+        menu=findViewById(R.id.menu_btn);
 
         addingprojectstolist();
 
-        mToolbar.setTitle("Projects");
-        // mToolbar.setTitleTextColor(getResources().getColor(R.color.));
+        mToolbar.setTitle(" My Projects");
+        mToolbar.setLogo(R.drawable.ic_home_black_24dp);
+        mToolbar.setTitleMarginStart(80);
         setSupportActionBar(mToolbar);
-        new SlidingRootNavBuilder(MainActivity.this)
-                .withToolbarMenuToggle(mToolbar)
-                .withMenuOpened(false)
-                .withMenuLayout(R.layout.drawer)
-                .withDragDistance(130)
-                .inject();
+
+        menu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setupBottomSheet();
+            }
+        });
 
 
         btn.setOnClickListener(new View.OnClickListener() {
@@ -119,8 +129,10 @@ public class MainActivity extends AppCompatActivity {
         mAddProjectAdapter=new AddProjectAdapter(list,MainActivity.this);
         if(mAddProjectAdapter.getItemCount()==0){
             mImageView.setVisibility(View.VISIBLE);
+            t1.setVisibility(View.VISIBLE);
         }else{
             mImageView.setVisibility(View.INVISIBLE);
+            t1.setVisibility(View.INVISIBLE);
         }
         mRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         mRecyclerView.setAdapter(mAddProjectAdapter);
@@ -156,6 +168,49 @@ public class MainActivity extends AppCompatActivity {
         }
         cursor.close();
 
+    }
+
+    public void setupBottomSheet(){
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(MainActivity.this, R.style.BottomSheetDialogTheme);
+        View bottomSheetView = LayoutInflater.from(getApplicationContext()).inflate(R.layout.bottom_sheet, (LinearLayout) findViewById(R.id.bottomsheetcontainer));
+        TextView Rate,Share,About,Bugs,Adds;
+        Rate =bottomSheetView.findViewById(R.id.drawer_rate_text);
+        Share =bottomSheetView.findViewById(R.id.drawer_share_text);
+        About=bottomSheetView.findViewById(R.id.drawer_about_text);
+        Bugs=bottomSheetView.findViewById(R.id.drawer_report_bug_text);
+        Adds=bottomSheetView.findViewById(R.id.drawer_remove_ad_text);
+
+        Adds.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this,"Add free version will be available with next update",Toast.LENGTH_LONG).show();
+            }
+        });
+
+        bottomSheetDialog.setContentView(bottomSheetView);
+        bottomSheetDialog.show();
+
+        Share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.putExtra(Intent.EXTRA_TEXT,"IndiScan - Indian's #1 tool for scanning documents, pictures and IDs directly to phone. Share pdfs in three simple steps."
+                +"\n"+"Download it Free :  <link>");
+                shareIntent.setType("text/plain");
+                startActivity(Intent.createChooser(shareIntent, "Share with"));
+            }
+        });
+
+        Bugs.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent (Intent.ACTION_VIEW , Uri.parse("mailto:" + "rapidcodeindia@gmail.com"));
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report");
+                intent.putExtra(Intent.EXTRA_TEXT, "if possible, please attach screenshot of bug report ");
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

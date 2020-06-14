@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 
 public class AddPicAdapter extends RecyclerView.Adapter<AddPicAdapter.AddPicViewHolder>{
     private int flag=1;
+
 
     public interface OnItemClickListener{
 
@@ -26,6 +29,7 @@ public class AddPicAdapter extends RecyclerView.Adapter<AddPicAdapter.AddPicView
 
     private ArrayList<ModelAddPic> mlist;
     private Context mContext;
+    private int lastPosition = -1;
 
     private OnItemClickListener mListener;
     public void setOnItmeClickListener(OnItemClickListener listener){
@@ -107,11 +111,23 @@ public class AddPicAdapter extends RecyclerView.Adapter<AddPicAdapter.AddPicView
         holder.project_id.setText(currentItem.getProjectId());
         holder.pic_id.setText(currentItem.getPicId());
         holder.item_pic.setImageBitmap(currentItem.getBitmap());
+        setAnimation(holder.itemView, position);
     }
 
     @Override
     public int getItemCount() {
         return mlist.size();
+    }
+
+    private void setAnimation(View viewToAnimate, int position)
+    {
+        if (position > lastPosition)
+        {
+            Animation animation = AnimationUtils.loadAnimation(mContext, R.anim.pic_item_anim);
+            animation.setDuration(animation.getDuration()+position*100);
+            viewToAnimate.startAnimation(animation);
+            lastPosition = position;
+        }
     }
 }
 

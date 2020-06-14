@@ -86,8 +86,9 @@ public class ImageViewer extends AppCompatActivity {
 
     }
 
-    //download image
+    //download pdf
     public void downloadSingleImage(Bitmap bitmap){
+
     }
 
     //share image

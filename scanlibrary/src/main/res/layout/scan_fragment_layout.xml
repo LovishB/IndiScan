@@ -11,11 +11,22 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#0080F0"
-        android:textColor="#FFF"
-        android:textSize="18sp"
         android:orientation="horizontal"
         android:padding="@dimen/bottom_bar_padding"
-        android:text="NEXT"></Button>
+        android:text="NEXT"
+        android:textColor="#FFF"
+        android:textSize="18sp"></Button>
+
+    <ImageButton
+        android:id="@+id/rotateLeft"
+        android:layout_width="60dp"
+        android:layout_height="50dp"
+
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="60dp"
+        android:background="#0080F0"
+        android:src="@drawable/ic_rotate_left_black_24dp" />
+
 
     <FrameLayout
         android:layout_width="match_parent"

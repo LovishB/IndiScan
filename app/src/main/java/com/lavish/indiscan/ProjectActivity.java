@@ -10,11 +10,17 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -33,7 +39,7 @@ public class ProjectActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
     private ImageView mImageView;
-    private ImageButton btn;
+    private ImageButton btn,camerabtn,gallerybtn;
     int REQUEST_CODE = 99;
     private CardView card;
     private TextView card_text;
@@ -47,6 +53,8 @@ public class ProjectActivity extends AppCompatActivity {
     private ArrayList<String> ids;
     private ArrayList<Integer> pic_nos;
     private ArrayList<byte[]> imgs;
+    private TextView t1;
+    private Animation btnanimation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +79,10 @@ public class ProjectActivity extends AppCompatActivity {
         cancel_pdf=findViewById(R.id.appCompatImageView6);
         share_selected=findViewById(R.id.project_share_selected);
         download_selected=findViewById(R.id.project_download_selected);
+        t1=findViewById(R.id.project_img_text);
+        camerabtn=findViewById(R.id.select_camera);
+        gallerybtn=findViewById(R.id.select_gallery);
+        btnanimation= AnimationUtils.loadAnimation(this,R.anim.floatingbtn);
 
         addimagestolist();
 
@@ -107,7 +119,6 @@ public class ProjectActivity extends AppCompatActivity {
                         ArrayList<Bitmap> finalBitmap = new ArrayList<>();
                         for(int i =0;i<list.size();i++){
                             finalBitmap.add(list.get(i).mBitmap); }
-                        downloadproject(finalBitmap);
                         shareproject(finalBitmap);
                     }
                 }
@@ -119,7 +130,25 @@ public class ProjectActivity extends AppCompatActivity {
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                camerabtn.setVisibility(View.VISIBLE);
+                gallerybtn.setVisibility(View.VISIBLE);
+                camerabtn.startAnimation(btnanimation);
+                gallerybtn.startAnimation(btnanimation);
+                //
+            }
+        });
+
+        camerabtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 openCamera();
+            }
+        });
+
+        gallerybtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openGallery();
             }
         });
 
@@ -139,7 +168,7 @@ public class ProjectActivity extends AppCompatActivity {
                     ArrayList<Bitmap> finalBitmap = new ArrayList<>();
                     for(int i =0;i<mlist.size();i++){
                         finalBitmap.add(mlist.get(i).mBitmap); }
-                    share_selected_images(finalBitmap);
+                   shareproject(finalBitmap);
                 }
             }
         });
@@ -163,6 +192,13 @@ public class ProjectActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ScanActivity.class);
         intent.putExtra(ScanConstants.OPEN_INTENT_PREFERENCE, preference);
         startActivityForResult(intent, REQUEST_CODE);
+    }
+
+    public void openGallery(){
+        int preference = ScanConstants.OPEN_MEDIA;
+        Intent intent = new Intent(this,ScanActivity.class);
+        intent.putExtra(ScanConstants.OPEN_INTENT_PREFERENCE,preference);
+        startActivityForResult(intent,REQUEST_CODE);
     }
 
     @Override
@@ -210,8 +246,10 @@ public class ProjectActivity extends AppCompatActivity {
         mAddPicAdapter = new AddPicAdapter(list, ProjectActivity.this);
         if (mAddPicAdapter.getItemCount() == 0) {
             mImageView.setVisibility(View.VISIBLE);
+            t1.setVisibility(View.VISIBLE);
         } else {
             mImageView.setVisibility(View.INVISIBLE);
+            t1.setVisibility(View.INVISIBLE);
         }
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         mRecyclerView.setAdapter(mAddPicAdapter);
@@ -288,62 +326,156 @@ public class ProjectActivity extends AppCompatActivity {
         builder2.setNegativeButton("no", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+
             }
         });
         AlertDialog dialog2 = builder2.create();
         dialog2.show();
     }
 
+
     //download complete project
-    public void downloadproject(ArrayList<Bitmap> finalBitmaps){
-        //not working
-        /*
-        Bitmap d = BitmapFactory.decodeResource(getResources(), R.drawable.welcomeback);
-        PdfDocument pdfDocument = new PdfDocument();
-        PdfDocument.PageInfo pi = new PdfDocument.PageInfo.Builder(d.getWidth(),d.getHeight(),1).create();
-        PdfDocument.Page page = new PdfDocument().startPage(pi);
+    public void downloadproject(final ArrayList<Bitmap> finalBitmap){
+        AlertDialog.Builder builder2 = new AlertDialog.Builder(ProjectActivity.this);
+        builder2.setTitle("Download all files");
+        builder2.setPositiveButton("Download All", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                LayoutInflater layoutInflater = LayoutInflater.from(ProjectActivity.this);
+                View promptView = layoutInflater.inflate(R.layout.change_name, null);
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ProjectActivity.this);
+                alertDialogBuilder.setView(promptView);
+                final EditText input =  promptView.findViewById(R.id.userInput);
+                input.setText(title);
+                alertDialogBuilder
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                //function to start download
+                                normalDownload(finalBitmap,input.getText()+"");
+                            }
+                        })
+                        .setNegativeButton("Back", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
 
-        Canvas canvas = page.getCanvas();
-        Paint paint = new Paint();
-        paint.setColor(Color.parseColor("#FFFFFF"));
-        canvas.drawPaint(paint);
+                            }
+                        });
+                AlertDialog alertD = alertDialogBuilder.create();
+                alertD.show();
+            }
+        });
 
-        d = Bitmap.createScaledBitmap(d,d.getWidth(),d.getHeight(),true);
-        paint.setColor(Color.BLUE);
-        canvas.drawBitmap(d,0,0,null);
-
-        pdfDocument.finishPage(page);
-
-        // Saving File
-        File root = new File("//sdcard//Download//");
-        if(!root.exists()){
-            root.mkdir();
-        }
-        File file = new File(root,"File-"+id+list.get(0).PicId);
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            pdfDocument.writeTo(fileOutputStream);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        pdfDocument.close();
-
-         */
+        builder2.setNegativeButton("Back", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        AlertDialog dialog2 = builder2.create();
+        dialog2.show();
     }
 
-    //share complete project
-    public void shareproject(ArrayList<Bitmap> finalBitmap){
-
-    }
-
-    //share selected images
-    public void share_selected_images(ArrayList<Bitmap> finalBitmap){
-
-    }
 
     //download selected images
-    public  void download_selected_images(ArrayList<Bitmap> finalBitmap){
+    public  void download_selected_images(final ArrayList<Bitmap> finalBitmap){
+        LayoutInflater layoutInflater = LayoutInflater.from(ProjectActivity.this);
+        View promptView = layoutInflater.inflate(R.layout.select_type, null);
+        AlertDialog.Builder builder2 = new AlertDialog.Builder(ProjectActivity.this);
+        builder2.setView(promptView);
+        builder2.setTitle("Page Choice");
+        final RadioGroup radioGroup = promptView.findViewById(R.id.RGroup);
+
+        builder2.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if( radioGroup.getCheckedRadioButtonId()==R.id.radio_auto){
+                    LayoutInflater layoutInflater = LayoutInflater.from(ProjectActivity.this);
+                    View promptView = layoutInflater.inflate(R.layout.change_name, null);
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ProjectActivity.this);
+                    alertDialogBuilder.setView(promptView);
+                    final EditText input =  promptView.findViewById(R.id.userInput);
+                    input.setText(title);
+                    alertDialogBuilder
+                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    normalDownload(finalBitmap,input.getText()+"");
+                                }
+                            })
+                            .setNegativeButton("Back", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            });
+                    AlertDialog alertD = alertDialogBuilder.create();
+                    alertD.show();
+                }else if( radioGroup.getCheckedRadioButtonId()==R.id.radio_id) {
+                    if (finalBitmap.size() < 3) {
+                        LayoutInflater layoutInflater = LayoutInflater.from(ProjectActivity.this);
+                        View promptView = layoutInflater.inflate(R.layout.change_name, null);
+                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(ProjectActivity.this);
+                        alertDialogBuilder.setView(promptView);
+                        final EditText input = promptView.findViewById(R.id.userInput);
+                        input.setText(title);
+                        alertDialogBuilder
+                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        IDDOwnload(finalBitmap, input.getText() + "");
+                                    }
+                                })
+                                .setNegativeButton("Back", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+
+                                    }
+                                });
+                        AlertDialog alertD = alertDialogBuilder.create();
+                        alertD.show();
+                    } else {
+                        Toast.makeText(ProjectActivity.this, "Select upto 2 files for ID format", Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        });
+
+        builder2.setNegativeButton("Back", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+
+
+
+
+            }
+        });
+        AlertDialog dialog2 = builder2.create();
+        dialog2.show();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        camerabtn.setVisibility(View.INVISIBLE);
+        gallerybtn.setVisibility(View.INVISIBLE);
+    }
+
+    //download pdf
+    public void normalDownload(ArrayList<Bitmap> finalBitmap,String fileName){
 
     }
+
+    //download Id pdf
+    public void IDDOwnload(ArrayList<Bitmap> finalBitmap,String fileName){
+
+    }
+
+    //share images
+
+    public void shareproject(final ArrayList<Bitmap> finalBitmap){
+
+    }
+
+
+
 }

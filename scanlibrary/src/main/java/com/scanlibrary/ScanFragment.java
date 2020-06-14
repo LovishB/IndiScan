@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.Map;
 public class ScanFragment extends Fragment {
 
     private Button scanButton;
+    private ImageButton rotateLeft;
     private ImageView sourceImageView;
     private FrameLayout sourceFrame;
     private PolygonView polygonView;
@@ -61,6 +63,8 @@ public class ScanFragment extends Fragment {
     }
 
     private void init() {
+        rotateLeft = (ImageButton) view.findViewById(R.id.rotateLeft);
+        rotateLeft.setOnClickListener(new RotateLeftClickListener());
         sourceImageView = (ImageView) view.findViewById(R.id.sourceImageView);
         scanButton = (Button) view.findViewById(R.id.scanButton);
         scanButton.setOnClickListener(new ScanButtonClickListener());
@@ -195,6 +199,22 @@ public class ScanFragment extends Fragment {
         Log.d("", "POints(" + x1 + "," + y1 + ")(" + x2 + "," + y2 + ")(" + x3 + "," + y3 + ")(" + x4 + "," + y4 + ")");
         Bitmap _bitmap = ((ScanActivity) getActivity()).getScannedBitmap(original, x1, y1, x2, y2, x3, y3, x4, y4);
         return _bitmap;
+    }
+
+    private class RotateLeftClickListener implements View.OnClickListener {
+        @Override
+        public void onClick(View v) {
+            Bitmap bitmapImg  = original;
+            //rotate left
+            Matrix matrix = new Matrix();
+            matrix.postRotate(-90);
+
+            Bitmap rotatedBitmap = Bitmap.createBitmap(bitmapImg, 0, 0, bitmapImg.getWidth(), bitmapImg.getHeight(), matrix, true);
+            setBitmap(rotatedBitmap);
+            original.recycle();
+            System.gc();
+            original = rotatedBitmap;
+        }
     }
 
     private class ScanAsyncTask extends AsyncTask<Void, Void, Bitmap> {
